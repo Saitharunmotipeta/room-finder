@@ -6,7 +6,5 @@ export type Room = {
   property_type: string
   tenant_preference: string
   owner_email: string
-  room_images: {
-    image_url: string
-  }[]
+  room_images: { image_url: string }[]
 }

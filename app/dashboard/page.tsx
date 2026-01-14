@@ -1,114 +1,117 @@
 "use client"
 
-import { useState } from "react"
-import { Room } from "@/types/room"
-import {
-  PROPERTY_TYPES,
-  TENANT_PREFERENCES,
-  PropertyType,
-  TenantPreference,
-} from "@/constants/roomOptions"
-import { searchRooms } from "@/features/rooms/room.service"
+import { useEffect, useState } from "react"
+import RoomList from "@/components/rooms/RoomList"
+import { useRooms } from "@/features/rooms/useRooms"
+import { useSavedRooms } from "@/hooks/useSavedRooms"
+import { getRecentlyViewed } from "@/utils/recentlyViewed"
+import { supabase } from "@/services/supabase/client"
+import LoginPromptModal from "@/components/common/LoginPromptModal"
+import { useAuth } from "@/hooks/useAuth"
 
-export default function HomePage() {
-  const [location, setLocation] = useState("")
-  const [minRent, setMinRent] = useState("")
-  const [maxRent, setMaxRent] = useState("")
-  const [propertyType, setPropertyType] = useState<PropertyType | "">("")
-  const [tenantPreference, setTenantPreference] =
-    useState<TenantPreference | "">("")
-  const [rooms, setRooms] = useState<Room[]>([])
-  const [loading, setLoading] = useState(false)
+type ViewMode = "explore" | "saved" | "recent"
 
-  const handleSearch = async () => {
-    if (!location) {
-      alert("Location is required")
-      return
+export default function DashboardPage() {
+  const [view, setView] = useState<ViewMode>("explore")
+  const [recentRooms, setRecentRooms] = useState<any[]>([])
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+
+  const { rooms, loading } = useRooms("")
+  const { savedIds, savedRooms, toggleSave } = useSavedRooms()
+  const { isAuthenticated } = useAuth()
+
+  // 🔹 Load recently viewed rooms
+  useEffect(() => {
+    const loadRecentRooms = async () => {
+      const ids = getRecentlyViewed()
+      if (ids.length === 0) return
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("*")
+        .in("id", ids)
+
+      if (!error && data) {
+        const ordered = ids
+          .map((id) => data.find((r) => r.id === id))
+          .filter(Boolean)
+
+        setRecentRooms(ordered)
+      }
     }
 
-    setLoading(true)
+    loadRecentRooms()
+  }, [])
 
-    const data = await searchRooms({
-      location,
-      minRent: minRent ? Number(minRent) : undefined,
-      maxRent: maxRent ? Number(maxRent) : undefined,
-      propertyType: propertyType || undefined,
-      tenantPreference: tenantPreference || undefined,
-    })
-
-    setRooms(data)
-    setLoading(false)
-  }
+  const showSavedTab = isAuthenticated && savedRooms.length > 0
+  const showRecentTab = recentRooms.length > 0
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Find Rooms</h1>
+    <main style={{ padding: 24 }}>
+      <h1 style={{ marginBottom: 16 }}>Rooms</h1>
 
-      <input
-        placeholder="Location"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
+      {/* Mode Switch */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+        <button
+          onClick={() => setView("explore")}
+          style={{ fontWeight: view === "explore" ? "bold" : "normal" }}
+        >
+          Explore
+        </button>
+
+        {showSavedTab && (
+          <button
+            onClick={() => setView("saved")}
+            style={{ fontWeight: view === "saved" ? "bold" : "normal" }}
+          >
+            Saved ❤️
+          </button>
+        )}
+
+        {showRecentTab && (
+          <button
+            onClick={() => setView("recent")}
+            style={{ fontWeight: view === "recent" ? "bold" : "normal" }}
+          >
+            Recent 👀
+          </button>
+        )}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : view === "explore" ? (
+        <RoomList
+          rooms={rooms}
+          savedRoomIds={savedIds}
+          onSave={toggleSave}
+          isAuthenticated={isAuthenticated}
+          onRequireLogin={() => setShowLoginPrompt(true)}
+        />
+      ) : view === "saved" ? (
+        <RoomList
+          rooms={savedRooms}
+          savedRoomIds={savedIds}
+          onSave={toggleSave}
+          isAuthenticated={isAuthenticated}
+          onRequireLogin={() => setShowLoginPrompt(true)}
+        />
+      ) : (
+        <RoomList
+          rooms={recentRooms}
+          savedRoomIds={savedIds}
+          onSave={toggleSave}
+          isAuthenticated={isAuthenticated}
+          onRequireLogin={() => setShowLoginPrompt(true)}
+        />
+      )}
+
+      {/* Login Modal */}
+      <LoginPromptModal
+        open={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
       />
-
-      <input
-        type="number"
-        placeholder="Min Rent"
-        value={minRent}
-        onChange={(e) => setMinRent(e.target.value)}
-      />
-
-      <input
-        type="number"
-        placeholder="Max Rent"
-        value={maxRent}
-        onChange={(e) => setMaxRent(e.target.value)}
-      />
-
-      <select
-        value={propertyType}
-        onChange={(e) =>
-          setPropertyType(e.target.value as PropertyType)
-        }
-      >
-        <option value="">Any Property Type</option>
-        {PROPERTY_TYPES.map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={tenantPreference}
-        onChange={(e) =>
-          setTenantPreference(e.target.value as TenantPreference)
-        }
-      >
-        <option value="">Any Tenant</option>
-        {TENANT_PREFERENCES.map((pref) => (
-          <option key={pref} value={pref}>
-            {pref}
-          </option>
-        ))}
-      </select>
-
-      <button onClick={handleSearch} disabled={loading}>
-        {loading ? "Searching..." : "Search"}
-      </button>
-
-      <hr />
-
-      {rooms.length === 0 && !loading && <p>No rooms found.</p>}
-
-      {rooms.map((room) => (
-        <div key={room.id} style={{ border: "1px solid #ccc", padding: 12 }}>
-          <h3>{room.title}</h3>
-          <p>{room.location}</p>
-          <p>₹{room.rent}</p>
-          <p>{room.property_type}</p>
-          <p>{room.tenant_preference}</p>
-        </div>
-      ))}
-    </div>
+    </main>
   )
 }

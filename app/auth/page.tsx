@@ -1,43 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 
-export default function AuthPage() {
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
+export default function AuthCallbackPage() {
+  const router = useRouter()
 
-  const handleLogin = async () => {
-    setLoading(true)
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.replace("/dashboard")
+      } else {
+        router.replace("/login")
+      }
     })
+  }, [router])
 
-    setLoading(false)
-
-    if (error) {
-      alert(error.message)
-    } else {
-      alert("Check your email to complete login")
-    }
-  }
-
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>Login</h1>
-      <input
-        type="email"
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button onClick={handleLogin} disabled={loading}>
-        {loading ? "Sending..." : "Send Login Link"}
-      </button>
-    </div>
-  )
+  return <p>Signing you in...</p>
 }

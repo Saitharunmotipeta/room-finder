@@ -1,47 +1,69 @@
 "use client"
 
 import Link from "next/link"
-import { supabase } from "@/services/supabase/client"
 import { useEffect, useState } from "react"
+import { supabase } from "@/services/supabase/client"
+import { useRouter } from "next/navigation"
 
 export default function Navbar() {
+  const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
     })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/dashboard")
+  }
+
+  if (loading) return null
 
   return (
     <nav
       style={{
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
-        padding: "16px 24px",
+        padding: "12px 24px",
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      <Link href="/" style={{ fontWeight: 600 }}>
+      <Link href="/dashboard" style={{ fontWeight: 600 }}>
         RoomFinder
       </Link>
 
       <div style={{ display: "flex", gap: 16 }}>
-        <Link href="/rooms">Find Rooms</Link>
-
-        {user ? (
+        {!user ? (
           <>
-            <Link href="/dashboard">Dashboard</Link>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              style={{ cursor: "pointer" }}
-            >
-              Logout
-            </button>
+            <Link href="/dashboard">Find Rooms</Link>
+            <Link href="/login">Login</Link>
           </>
         ) : (
-          <Link href="/auth">Login</Link>
+          <>
+            <Link href="/dashboard">Dashboard</Link>
+            <button onClick={handleLogout}>Logout</button>
+          </>
         )}
       </div>
     </nav>
