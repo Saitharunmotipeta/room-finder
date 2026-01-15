@@ -1,37 +1,61 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import RoomList from "@/components/rooms/RoomList"
+import SearchBar from "@/components/rooms/SearchBar"
 import { useRooms } from "@/features/rooms/useRooms"
 import { useSavedRooms } from "@/hooks/useSavedRooms"
 import { getRecentlyViewed } from "@/utils/recentlyViewed"
 import { supabase } from "@/services/supabase/client"
-import LoginPromptModal from "@/components/common/LoginPromptModal"
 import { useAuth } from "@/hooks/useAuth"
+import { useProfile } from "@/hooks/useProfile"
+import LoginPromptModal from "@/components/common/LoginPromptModal"
+import { redirectByRole } from "@/utils/redirectByRole"
 
-type ViewMode = "explore" | "saved" | "recent"
+type ViewMode = "all" | "explore" | "saved" | "recent"
 
 export default function DashboardPage() {
-  const [view, setView] = useState<ViewMode>("explore")
-  const [recentRooms, setRecentRooms] = useState<any[]>([])
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  const view = (searchParams.get("view") as ViewMode) || "all"
+
+  const { isAuthenticated } = useAuth()
+  const { profile } = useProfile()
+
+  // 🔹 NEW: role guard (dashboard = user only)
+  useEffect(() => {
+    if (!profile) return
+
+    if (profile.role !== "user") {
+      router.replace(redirectByRole(profile.role))
+    }
+  }, [profile, router])
+
+  const [location, setLocation] = useState("")
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  const { rooms, loading } = useRooms("")
+  // 🔹 Search applies mainly to explore (safe to keep as-is)
+  const { rooms, loading } = useRooms(location)
   const { savedIds, savedRooms, toggleSave } = useSavedRooms()
-  const { isAuthenticated } = useAuth()
 
-  // 🔹 Load recently viewed rooms
+  const [recentRooms, setRecentRooms] = useState<any[]>([])
+
+  /* ---------------- Recent Rooms (Viewed) ---------------- */
   useEffect(() => {
+    if (view !== "recent") return
+
     const loadRecentRooms = async () => {
       const ids = getRecentlyViewed()
       if (ids.length === 0) return
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("rooms")
         .select("*")
         .in("id", ids)
 
-      if (!error && data) {
+      if (data) {
         const ordered = ids
           .map((id) => data.find((r) => r.id === id))
           .filter(Boolean)
@@ -41,47 +65,74 @@ export default function DashboardPage() {
     }
 
     loadRecentRooms()
-  }, [])
+  }, [view])
 
-  const showSavedTab = isAuthenticated && savedRooms.length > 0
-  const showRecentTab = recentRooms.length > 0
+  /* ---------------- View Flags ---------------- */
+  const isExplore = view === "explore"
+  const isSaved = view === "saved"
+  const isRecent = view === "recent"
 
   return (
     <main style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 16 }}>Rooms</h1>
+      {/* ---------------- Header ---------------- */}
+      <header style={{ marginBottom: 20 }}>
+        <h1 style={{ marginBottom: 6 }}>
+          {isExplore
+            ? "Explore Rooms"
+            : isSaved
+            ? "Saved Rooms"
+            : isRecent
+            ? "Recently Viewed"
+            : "Available Rooms"}
+        </h1>
 
-      {/* Mode Switch */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-        <button
-          onClick={() => setView("explore")}
-          style={{ fontWeight: view === "explore" ? "bold" : "normal" }}
-        >
-          Explore
-        </button>
+        <p style={{ color: "#555" }}>
+          {isExplore
+            ? "Search rooms by location and preferences"
+            : isSaved
+            ? "Rooms you have saved for later"
+            : isRecent
+            ? "Rooms you recently viewed"
+            : "Browse all available rooms"}
+        </p>
+      </header>
 
-        {showSavedTab && (
-          <button
-            onClick={() => setView("saved")}
-            style={{ fontWeight: view === "saved" ? "bold" : "normal" }}
-          >
-            Saved ❤️
-          </button>
-        )}
+      {/* ---------------- Search (Explore only) ---------------- */}
+      {isExplore && (
+        <div style={{ marginBottom: 20 }}>
+          <SearchBar value={location} onChange={setLocation} />
+        </div>
+      )}
 
-        {showRecentTab && (
-          <button
-            onClick={() => setView("recent")}
-            style={{ fontWeight: view === "recent" ? "bold" : "normal" }}
-          >
-            Recent 👀
-          </button>
-        )}
-      </div>
-
-      {/* Content */}
+      {/* ---------------- Content ---------------- */}
       {loading ? (
-        <p>Loading...</p>
-      ) : view === "explore" ? (
+        <p>Loading rooms...</p>
+      ) : isSaved ? (
+        savedRooms.length === 0 ? (
+          <p>No saved rooms yet.</p>
+        ) : (
+          <RoomList
+            rooms={savedRooms}
+            savedRoomIds={savedIds}
+            onSave={toggleSave}
+            isAuthenticated={isAuthenticated}
+            onRequireLogin={() => setShowLoginPrompt(true)}
+          />
+        )
+      ) : isRecent ? (
+        recentRooms.length === 0 ? (
+          <p>No recently viewed rooms.</p>
+        ) : (
+          <RoomList
+            rooms={recentRooms}
+            savedRoomIds={savedIds}
+            onSave={toggleSave}
+            isAuthenticated={isAuthenticated}
+            onRequireLogin={() => setShowLoginPrompt(true)}
+          />
+        )
+      ) : (
+        // all + explore
         <RoomList
           rooms={rooms}
           savedRoomIds={savedIds}
@@ -89,25 +140,9 @@ export default function DashboardPage() {
           isAuthenticated={isAuthenticated}
           onRequireLogin={() => setShowLoginPrompt(true)}
         />
-      ) : view === "saved" ? (
-        <RoomList
-          rooms={savedRooms}
-          savedRoomIds={savedIds}
-          onSave={toggleSave}
-          isAuthenticated={isAuthenticated}
-          onRequireLogin={() => setShowLoginPrompt(true)}
-        />
-      ) : (
-        <RoomList
-          rooms={recentRooms}
-          savedRoomIds={savedIds}
-          onSave={toggleSave}
-          isAuthenticated={isAuthenticated}
-          onRequireLogin={() => setShowLoginPrompt(true)}
-        />
       )}
 
-      {/* Login Modal */}
+      {/* ---------------- Login Prompt ---------------- */}
       <LoginPromptModal
         open={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}

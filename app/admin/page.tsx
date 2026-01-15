@@ -3,162 +3,113 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
+import { useProfile } from "@/hooks/useProfile"
+import { useAuth } from "@/hooks/useAuth"
 
 type Room = {
   id: string
   title: string
   location: string
   rent: number
-  created_at: string
+  owner_email: string
 }
 
 export default function AdminPage() {
   const router = useRouter()
+  const { user } = useAuth()
+  const { profile } = useProfile()
 
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  const [stats, setStats] = useState({
-    users: 0,
-    rooms: 0,
-  })
-
+  /* ---------- Guard: Only admins allowed ---------- */
   useEffect(() => {
-    const init = async () => {
-      /* ------------------ AUTH CHECK ------------------ */
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    if (!user) return
+    if (profile && profile.role !== "admin") {
+      router.replace("/dashboard")
+    }
+  }, [user, profile, router])
 
-      if (!session) {
-        router.replace("/auth")
-        return
-      }
+  /* ---------- Load all rooms ---------- */
+  useEffect(() => {
+    if (!user || profile?.role !== "admin") return
 
-      /* ------------------ ROLE CHECK ------------------ */
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-
-        if (profileError || !profiles || profiles.length === 0) {
-        console.error("Profile fetch failed", profileError)
-        router.replace("/")
-        return
-        }
-
-        const role = profiles[0].role
-
-        if (role !== "admin") {
-        router.replace("/")
-        return
-        }
-
-
-      /* ------------------ SYSTEM STATS ------------------ */
-      const [{ count: users }, { count: roomsCount }] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("rooms").select("*", { count: "exact", head: true }),
-      ])
-
-      setStats({
-        users: users ?? 0,
-        rooms: roomsCount ?? 0,
-      })
-
-      /* ------------------ FETCH ALL ROOMS ------------------ */
-      const { data: roomsData, error: roomsError } = await supabase
+    const loadRooms = async () => {
+      const { data } = await supabase
         .from("rooms")
-        .select("id, title, location, rent, created_at")
+        .select("id, title, location, rent, owner_email")
         .order("created_at", { ascending: false })
 
-      if (roomsError) {
-        setError("Failed to load rooms")
-      } else {
-        setRooms(roomsData || [])
-      }
-
+      if (data) setRooms(data)
       setLoading(false)
     }
 
-    init()
-  }, [router])
+    loadRooms()
+  }, [user, profile])
 
-  const handleDeleteRoom = async (roomId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to permanently delete this room?"
-    )
-
+  const handleDelete = async (roomId: string) => {
+    const confirmed = confirm("Delete this room permanently?")
     if (!confirmed) return
 
-    const { error } = await supabase.from("rooms").delete().eq("id", roomId)
-
-    if (error) {
-      alert("Failed to delete room")
-      return
-    }
-
-    setRooms((prev) => prev.filter((room) => room.id !== roomId))
-    setStats((prev) => ({ ...prev, rooms: prev.rooms - 1 }))
+    await supabase.from("rooms").delete().eq("id", roomId)
+    setRooms((prev) => prev.filter((r) => r.id !== roomId))
   }
 
-  /* ------------------ RENDER STATES ------------------ */
-
-  if (loading) {
-    return <p>Loading admin panel…</p>
-  }
-
-  if (error) {
-    return <p>{error}</p>
-  }
+  if (loading) return <p style={{ padding: 24 }}>Loading admin panel...</p>
 
   return (
-    <div>
-      <h1>Admin Panel</h1>
-
-      <p style={{ color: "red", marginBottom: 16 }}>
-        ⚠️ You are logged in as an administrator. Actions here affect the entire
-        system.
+    <main style={{ padding: 24 }}>
+      <h1 style={{ marginBottom: 6 }}>Admin Panel</h1>
+      <p style={{ color: "#555", marginBottom: 24 }}>
+        Manage all room listings
       </p>
 
-      {/* -------- SYSTEM OVERVIEW -------- */}
-      <section style={{ marginBottom: 32 }}>
-        <h2>System Overview</h2>
-        <ul>
-          <li>Total Users: {stats.users}</li>
-          <li>Total Rooms: {stats.rooms}</li>
-        </ul>
-      </section>
-
-      {/* -------- ROOM MODERATION -------- */}
-      <section>
-        <h2>Room Moderation</h2>
-
-        {rooms.length === 0 && <p>No rooms available.</p>}
-
-        {rooms.map((room) => (
-          <div
-            key={room.id}
-            style={{
-              border: "1px solid #ddd",
-              padding: 12,
-              marginBottom: 8,
-            }}
-          >
-            <strong>{room.title}</strong>
-            <div>{room.location}</div>
-            <div>₹{room.rent}</div>
-
-            <button
-              onClick={() => handleDeleteRoom(room.id)}
-              style={{ marginTop: 8, color: "red" }}
-            >
-              Delete Room
-            </button>
-          </div>
-        ))}
-      </section>
-    </div>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #e5e7eb",
+        }}
+      >
+        <thead>
+          <tr style={{ background: "#f9fafb" }}>
+            <th style={th}>Title</th>
+            <th style={th}>Location</th>
+            <th style={th}>Rent</th>
+            <th style={th}>Owner</th>
+            <th style={th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rooms.map((room) => (
+            <tr key={room.id}>
+              <td style={td}>{room.title}</td>
+              <td style={td}>{room.location}</td>
+              <td style={td}>₹{room.rent}</td>
+              <td style={td}>{room.owner_email}</td>
+              <td style={td}>
+                <button
+                  onClick={() => handleDelete(room.id)}
+                  style={{ color: "red" }}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </main>
   )
+}
+
+const th = {
+  padding: 12,
+  textAlign: "left" as const,
+  borderBottom: "1px solid #e5e7eb",
+}
+
+const td = {
+  padding: 12,
+  borderBottom: "1px solid #e5e7eb",
 }

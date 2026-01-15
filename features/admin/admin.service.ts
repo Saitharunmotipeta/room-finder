@@ -1,13 +1,19 @@
 import { supabase } from "@/services/supabase/client"
 
-export async function getAdminOverview() {
-  const [{ count: users }, { count: rooms }] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("rooms").select("*", { count: "exact", head: true }),
-  ])
+export async function getAllRooms() {
+  return supabase
+    .from("rooms")
+    .select("id, title, location, rent, owner_email")
+    .order("created_at", { ascending: false })
+}
 
-  return {
-    users: users ?? 0,
-    rooms: rooms ?? 0,
-  }
+export async function getOwners() {
+  return supabase
+    .from("profiles")
+    .select("id, name, email")
+    .eq("role", "owner")
+}
+
+export async function deleteRoomAsAdmin(roomId: string) {
+  return supabase.from("rooms").delete().eq("id", roomId)
 }

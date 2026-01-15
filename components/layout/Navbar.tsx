@@ -1,42 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { supabase } from "@/services/supabase/client"
-import { useRouter } from "next/navigation"
+import ProfileBadge from "@/components/common/ProfileBadge"
+import { useAuth } from "@/hooks/useAuth"
+import { useProfile } from "@/hooks/useProfile"
 
 export default function Navbar() {
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      setUser(user)
-      setLoading(false)
-    }
-
-    getUser()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push("/dashboard")
-  }
+  const { isAuthenticated, loading } = useAuth()
+  const { profile } = useProfile()
 
   if (loading) return null
 
@@ -45,24 +16,51 @@ export default function Navbar() {
       style={{
         display: "flex",
         justifyContent: "space-between",
+        alignItems: "center",
         padding: "12px 24px",
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      <Link href="/dashboard" style={{ fontWeight: 600 }}>
+      {/* Brand */}
+      <Link href="/" style={{ fontWeight: 600, fontSize: 18 }}>
         RoomFinder
       </Link>
 
-      <div style={{ display: "flex", gap: 16 }}>
-        {!user ? (
+      {/* Right side */}
+      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        {/* ---------------- Guest ---------------- */}
+        {!isAuthenticated && (
           <>
             <Link href="/dashboard">Find Rooms</Link>
             <Link href="/login">Login</Link>
           </>
-        ) : (
+        )}
+
+        {/* ---------------- User ---------------- */}
+        {isAuthenticated && profile?.role === "user" && (
           <>
-            <Link href="/dashboard">Dashboard</Link>
-            <button onClick={handleLogout}>Logout</button>
+            <Link href="/dashboard?view=explore">Explore</Link>
+            <Link href="/dashboard?view=saved">Saved</Link>
+            <Link href="/dashboard?view=recent">Recent</Link>
+            <ProfileBadge />
+          </>
+        )}
+
+        {/* ---------------- Owner ---------------- */}
+        {isAuthenticated && profile?.role === "owner" && (
+          <>
+            <Link href="/owner">Owner</Link>
+            <Link href="/owner/rooms">My Rooms</Link>
+            <ProfileBadge />
+          </>
+        )}
+
+        {/* ---------------- Admin ---------------- */}
+        {isAuthenticated && profile?.role === "admin" && (
+          <>
+            <Link href="/admin">Admin</Link>
+            <Link href="/admin/owners">Owners</Link>
+            <ProfileBadge />
           </>
         )}
       </div>

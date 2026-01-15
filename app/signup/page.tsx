@@ -1,12 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 import Link from "next/link"
+import { redirectByRole } from "@/utils/redirectByRole"
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // 🔹 role intent from query (?role=owner | admin | user)
+  const role =
+    searchParams.get("role") === "admin"
+      ? "admin"
+      : searchParams.get("role") === "owner"
+      ? "owner"
+      : "user"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -17,19 +27,34 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signUp({
+    // 1️⃣ Create auth user
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     })
 
-    setLoading(false)
-
-    if (error) {
-      setError(error.message)
+    if (error || !data.user) {
+      setLoading(false)
+      setError(error?.message || "Signup failed")
       return
     }
 
-    router.replace("/dashboard")
+    // 2️⃣ Create profile with role
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: data.user.id,
+      email,
+      role,
+    })
+
+    setLoading(false)
+
+    if (profileError) {
+      setError(profileError.message)
+      return
+    }
+
+    // 3️⃣ Redirect based on role
+    router.replace(redirectByRole(role))
   }
 
   return (
