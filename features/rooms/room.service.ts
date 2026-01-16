@@ -2,40 +2,42 @@ import { supabase } from "@/services/supabase/client"
 import { Room } from "./room.types"
 import { parseSearchQuery } from "@/utils/parseSearchQuery"
 
-export async function fetchRooms(search: string): Promise<Room[]> {
-    let query = supabase.from("rooms").select("*")
+export async function fetchRooms(query: string) {
+  let q = supabase
+    .from("rooms")
+    .select(`
+      id,
+      title,
+      location,
+      rent,
+      property_type,
+      tenant_preference,
+      owner_email,
+      room_images (
+        image_url
+      )
+    `)
+    .order("created_at", { ascending: false })
 
-    if (search.trim()) {
-      const filters = parseSearchQuery(search)
-
-      if (filters.location) {
-        query = query.ilike("location", `%${filters.location}%`)
-      }
-
-      if (filters.property_type) {
-        query = query.eq("property_type", filters.property_type)
-      }
-
-      if (filters.tenant_preference) {
-        query = query.eq("tenant_preference", filters.tenant_preference)
-      }
-
-      if (filters.maxRent) {
-        query = query.lte("rent", filters.maxRent)
-      }
-    }
-
-    const { data, error } = await query.order("created_at", {
-      ascending: false,
-    })
-
-    if (error) {
-      console.error("fetchRooms error:", error.message)
-      return []
-    }
-
-    return data || []
+  if (query) {
+    q = q.or(`
+      title.ilike.%${query}%,
+      location.ilike.%${query}%,
+      property_type.ilike.%${query}%,
+      tenant_preference.ilike.%${query}%
+    `)
   }
+
+  const { data, error } = await q
+
+  if (error) {
+    console.error("Explore fetch error:", error)
+    return []
+  }
+
+  return data || []
+}
+
 
 export async function fetchRoomById(id: string): Promise<Room | null> {
   const { data, error } = await supabase

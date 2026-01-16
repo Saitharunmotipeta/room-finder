@@ -79,8 +79,8 @@ export default function RootLayout({
 
         {/* Bottom */}
         <footer style={footer}>
-          <p style={{ fontSize: 14 }}>
-            Built by <strong>Saitharun</strong>
+          <p style={{ fontSize: 18 }}>
+            Developed by <strong>Saitharun</strong>
           </p>
         </footer>
       </body>

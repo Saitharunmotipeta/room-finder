@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
 
-  /* ---------- Guard: Admin only ---------- */
+  /* ---------- Guard ---------- */
   useEffect(() => {
     if (!user) return
     if (profile && profile.role !== "admin") {
@@ -30,7 +30,7 @@ export default function AdminPage() {
     }
   }, [user, profile])
 
-  /* ---------- Load all rooms ---------- */
+  /* ---------- Load Rooms ---------- */
   useEffect(() => {
     if (!user || profile?.role !== "admin") return
 
@@ -48,74 +48,140 @@ export default function AdminPage() {
   }, [user, profile])
 
   const handleDelete = async (roomId: string) => {
-    const confirmed = confirm("Are you sure you want to delete this room?")
+    const confirmed = confirm("Delete this room permanently?")
     if (!confirmed) return
 
     await supabase.from("rooms").delete().eq("id", roomId)
     setRooms((prev) => prev.filter((r) => r.id !== roomId))
   }
 
-  if (loading) return <p style={{ padding: 24 }}>Loading admin dashboard…</p>
+  if (loading) {
+    return <main style={page}><p>Loading admin dashboard…</p></main>
+  }
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1 style={{color: "black"}}>Admin Dashboard</h1>
-      <p style={{ color: "black", marginBottom: 24 }}>
-        Review and moderate all room listings on the platform.
-      </p>
+    <main style={page}>
+      {/* ---------- Header ---------- */}
+      <section style={headerCard}>
+        <h1 style={headerTitle}>Admin Dashboard</h1>
+        <p style={headerSubtitle}>
+          Manage all room listings published on the platform.
+        </p>
+      </section>
 
-      {rooms.length === 0 ? (
-        <p>No rooms available.</p>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          <thead>
-            <tr style={{ background: "#f9fafb" }}>
-              <th style={th}>Title</th>
-              <th style={th}>Location</th>
-              <th style={th}>Rent</th>
-              <th style={th}>Owner Email</th>
-              <th style={th}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map((room) => (
-              <tr key={room.id}>
-                <td style={td}>{room.title}</td>
-                <td style={td}>{room.location}</td>
-                <td style={td}>₹{room.rent}</td>
-                <td style={td}>{room.owner_email}</td>
-                <td style={td}>
-                  <button
-                    onClick={() => handleDelete(room.id)}
-                    style={{ color: "red" }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+      {/* ---------- Table ---------- */}
+      <section style={tableCard}>
+        {rooms.length === 0 ? (
+          <p style={empty}>No rooms available.</p>
+        ) : (
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Title</th>
+                <th style={th}>Location</th>
+                <th style={th}>Rent</th>
+                <th style={th}>Owner Email</th>
+                <th style={{ ...th, textAlign: "center" }}>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+
+            <tbody>
+              {rooms.map((room) => (
+                <tr key={room.id} style={tr}>
+                  <td style={td}>{room.title}</td>
+                  <td style={td}>{room.location}</td>
+                  <td style={td}>₹{room.rent}</td>
+                  <td style={td}>{room.owner_email}</td>
+                  <td style={{ ...td, textAlign: "center" }}>
+                    <button
+                      onClick={() => handleDelete(room.id)}
+                      style={deleteBtn}
+                      title="Delete room"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </main>
   )
 }
 
+/* ---------------- Styles ---------------- */
+
+const page = {
+  minHeight: "100vh",
+  padding: 32,
+  background: "#f8fafc",
+}
+
+const headerCard = {
+  background: "#ffffff",
+  padding: 24,
+  borderRadius: 12,
+  marginBottom: 24,
+  border: "1px solid #e5e7eb",
+}
+
+const headerTitle = {
+  fontSize: 26,
+  fontWeight: 700,
+  marginBottom: 6,
+  color: "#0f172a",
+}
+
+const headerSubtitle = {
+  fontSize: 14,
+  color: "#475569",
+}
+
+const tableCard = {
+  background: "#ffffff",
+  borderRadius: 12,
+  border: "1px solid #e5e7eb",
+  overflowX: "auto" as const,
+}
+
+const table = {
+  width: "100%",
+  borderCollapse: "collapse" as const,
+}
+
 const th = {
-  padding: 12,
+  padding: "16px",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#334155",
+  background: "#f1f5f9",
+  borderBottom: "2px solid #e5e7eb",
   textAlign: "left" as const,
-  borderBottom: "1px solid #e5e7eb",
-  color:"black",
 }
 
 const td = {
-  padding: 12,
+  padding: "16px",
+  fontSize: 14,
+  color: "#0f172a",
   borderBottom: "1px solid #e5e7eb",
-  color:"black",
+}
+
+const tr = {
+  transition: "background 0.15s ease",
+}
+
+const deleteBtn = {
+  background: "#fee2e2",
+  color: "#b91c1c",
+  border: "none",
+  padding: 8,
+  borderRadius: 8,
+  cursor: "pointer",
+}
+
+const empty = {
+  padding: 24,
+  color: "#64748b",
 }

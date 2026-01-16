@@ -10,11 +10,11 @@ export default function LoginPage() {
 
   /* ---------------- Styles ---------------- */
   const container = {
-    minHeight: "100vh",
+    minHeight: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#f8fafc",
+    background: "linear-gradient(180deg, #7b8dc74c 0%, #7694e6 0%, #fcfcfc 100%)",
   }
 
   const card = {
@@ -22,7 +22,7 @@ export default function LoginPage() {
     padding: 28,
     borderRadius: 12,
     background: "#ffffff",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
   }
 
   const title = {
@@ -148,7 +148,7 @@ export default function LoginPage() {
 
         <label style={{color:"black",...label}}>Email address</label>
         <input
-          style={input}
+          style={{color:"black",...input}}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
@@ -157,7 +157,7 @@ export default function LoginPage() {
         <label style={{color:"black",...label}}>Password</label>
         <input
           type="password"
-          style={input}
+          style={{color:"black",...input}}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"

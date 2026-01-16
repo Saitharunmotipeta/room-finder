@@ -98,11 +98,11 @@ export default function SignupPage() {
 /* ---------- Styles ---------- */
 
 const page = {
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "#f8fafc",
+    minHeight: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(180deg, #7b8dc74c 0%, #7694e6 0%, #fcfcfc 100%)",
 }
 
 const card = {

@@ -5,7 +5,7 @@ export default function LandingPage() {
     <main style={page}>
       {/* ---------------- Hero ---------------- */}
       <section style={hero}>
-        <h1 style={heroTitle}>
+        <h1 style={{...heroTitle, color:"black" }}>
           Find the right room.
           <br />
           <span style={{ color: "#4f46e5" }}>Without the chaos.</span>
@@ -28,7 +28,7 @@ export default function LandingPage() {
 
       {/* ---------------- What is this ---------------- */}
       <section style={section}>
-        <h2 style={sectionTitle}>What is RoomFinder?</h2>
+        <h2 style={{...sectionTitle, color:"black" }}>What is RoomFinder?</h2>
         <p style={sectionText}>
           RoomFinder is a room discovery platform designed for students,
           professionals, and families who want a simple way to find rooms
@@ -38,9 +38,9 @@ export default function LandingPage() {
 
       {/* ---------------- Features ---------------- */}
       <section style={sectionAlt}>
-        <h2 style={sectionTitle}>Core Features</h2>
+        <h2 style={{...sectionTitle, color:"black" }}>Core Features</h2>
 
-        <div style={featureGrid}>
+        <div style={{...featureGrid, color:"blue" }}>
           <Feature
             title="Smart Search"
             text="Search using natural terms like “1 BHK”, “family”, or “under 10,000” — no filters or dropdowns required."
@@ -62,9 +62,9 @@ export default function LandingPage() {
 
       {/* ---------------- User Flow ---------------- */}
       <section style={section}>
-        <h2 style={sectionTitle}>How It Works</h2>
+        <h2 style={{...sectionTitle, color:"black" }}>How It Works</h2>
 
-        <div style={flowGrid}>
+        <div style={{...flowGrid, color:"blue" }}>
           <Flow
             title="For Users"
             points={[
@@ -95,7 +95,7 @@ export default function LandingPage() {
 
       {/* ---------------- CTA ---------------- */}
       <section style={ctaSection}>
-        <h2 style={{ marginBottom: 12 }}>
+        <h2 style={{ marginBottom: 12, color:"black" }}>
           Ready to find your next place?
         </h2>
         <p style={{ marginBottom: 20, color: "#475569" }}>
