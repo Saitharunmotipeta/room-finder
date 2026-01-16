@@ -22,7 +22,7 @@ export default function Navbar() {
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      <Link href="/" style={{ fontWeight: 600 }}>
+      <Link href="/" style={{ fontWeight: 600 , fontSize: 25 ,fontFamily: 'Arial, sans-serif' }}>
         RoomFinder
       </Link>
 

@@ -76,7 +76,7 @@ export default function DashboardPage() {
     <main style={{ padding: 24 }}>
       {/* ---------------- Header ---------------- */}
       <header style={{ color : "#111827", marginBottom: 20 }}>
-        <h1 style={{ marginBottom: 6 }}>
+        <h1 style={{ marginBottom: 6 , fontSize: 28 , fontWeight: 600}}>
           {isExplore
             ? "Explore Rooms"
             : isSaved

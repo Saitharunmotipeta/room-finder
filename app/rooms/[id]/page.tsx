@@ -221,7 +221,9 @@ const imagePlaceholder = {
 
 const infoGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 2fr))",
+  justifyContent: "space-between",
+  gridTempltateRows: "2fr",
   gap: 16,
   marginBottom: 32,
 }

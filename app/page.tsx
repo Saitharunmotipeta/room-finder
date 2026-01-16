@@ -153,7 +153,7 @@ const page = {
 }
 
 const hero = {
-  minHeight: "70vh",
+  minHeight: "100%",
   padding: "80px 24px",
   textAlign: "center" as const,
   background: "#f8fafc",
