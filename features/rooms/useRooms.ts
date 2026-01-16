@@ -3,18 +3,18 @@ import { fetchRooms } from "./room.service"
 import { Room } from "./room.types"
 import { useDebounce } from "@/hooks/useDebounce"
 
-export function useRooms(location: string) {
+export function useRooms(search: string) {
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
 
-  const debouncedLocation = useDebounce(location, 400)
+  const debouncedSearch = useDebounce(search, 400)
 
   useEffect(() => {
     setLoading(true)
-    fetchRooms(debouncedLocation)
+    fetchRooms(debouncedSearch)
       .then(setRooms)
       .finally(() => setLoading(false))
-  }, [debouncedLocation])
+  }, [debouncedSearch])
 
   return { rooms, loading }
 }

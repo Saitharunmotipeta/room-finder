@@ -19,6 +19,46 @@ export const metadata: Metadata = {
   description: "Find rooms. List rooms. Simple.",
 };
 
+const NAVBAR_HEIGHT = 64
+const FOOTER_HEIGHT = 48
+
+const body = {
+  margin: 0,
+  height: "100vh",
+  display: "flex",
+  flexDirection: "column" as const,
+  overflow: "hidden", // ❗ critical
+}
+
+const header = {
+  height: NAVBAR_HEIGHT,
+  textcolor: "#111827",
+  flexShrink: 0,
+  borderBottom: "1px solid #e5e7eb",
+  background: "#ffffff",
+  position: "sticky" as const,
+  top: 0,
+  zIndex: 50,
+}
+
+const main = {
+  flex: 1,
+  overflowY: "auto" as const, // ✅ ONLY scrollable area
+  padding: 24,
+  background: "#f8fafc",
+}
+
+const footer = {
+  height: FOOTER_HEIGHT,
+  flexShrink: 0,
+  color: "#111827",
+  borderTop: "1px solid #e5e7eb",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#ffffff",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,9 +66,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <Navbar />
-        <PageContainer>{children}</PageContainer>
+      <body style={body}>
+        {/* Top */}
+        <header style={header}>
+          <Navbar />
+        </header>
+
+        {/* Middle (scrollable) */}
+        <main style={main}>
+          {children}
+        </main>
+
+        {/* Bottom */}
+        <footer style={footer}>
+          <p style={{ fontSize: 14 }}>
+            Built by <strong>Saitharun</strong>
+          </p>
+        </footer>
       </body>
     </html>
   );

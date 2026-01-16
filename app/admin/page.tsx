@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 import { useProfile } from "@/hooks/useProfile"
 import { useAuth } from "@/hooks/useAuth"
+import { Trash2 } from "lucide-react"
 
 type Room = {
   id: string
@@ -58,8 +59,8 @@ export default function AdminPage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Admin Dashboard</h1>
-      <p style={{ color: "#555", marginBottom: 24 }}>
+      <h1 style={{color: "black"}}>Admin Dashboard</h1>
+      <p style={{ color: "black", marginBottom: 24 }}>
         Review and moderate all room listings on the platform.
       </p>
 
@@ -94,7 +95,7 @@ export default function AdminPage() {
                     onClick={() => handleDelete(room.id)}
                     style={{ color: "red" }}
                   >
-                    Delete
+                    <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
@@ -110,9 +111,11 @@ const th = {
   padding: 12,
   textAlign: "left" as const,
   borderBottom: "1px solid #e5e7eb",
+  color:"black",
 }
 
 const td = {
   padding: 12,
   borderBottom: "1px solid #e5e7eb",
+  color:"black",
 }

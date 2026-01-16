@@ -37,11 +37,11 @@ export default function OwnerPage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Owner Dashboard</h1>
+      <h1 style={{ color: "black" }}>Owner Dashboard</h1>
 
       <button
         onClick={() => router.push("/owner/new")}
-        style={{ marginBottom: 20 }}
+        style={{ marginBottom: 20, color:"blue"}}
       >
         ➕ Add New Room
       </button>
@@ -50,7 +50,7 @@ export default function OwnerPage() {
         <p>No rooms yet</p>
       ) : (
         rooms.map((room) => (
-          <div key={room.id} style={{ borderBottom: "1px solid #ddd", padding: 12 }}>
+          <div key={room.id} style={{ borderBottom: "1px solid #ddd", padding: 12 ,color:"black"}}>
             <h3>{room.title}</h3>
             <p>{room.location}</p>
             <button onClick={() => deleteRoom(room.id)} style={{ color: "red" }}>

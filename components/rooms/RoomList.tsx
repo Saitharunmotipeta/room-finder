@@ -4,8 +4,8 @@ type Props = {
   rooms: any[]
   savedRoomIds?: string[]
   onSave?: (roomId: string) => void
-  isAuthenticated: boolean
-  onRequireLogin: () => void
+  isAuthenticated?: boolean
+  onRequireLogin?: () => void
 }
 
 export default function RoomList({
@@ -18,15 +18,15 @@ export default function RoomList({
   if (rooms.length === 0) return <p>No rooms found.</p>
 
   return (
-    <div>
+    <div style={{ color : "#111827", display: "grid", gridTemplateColumns: "repeat(2, 1fr)" }}>
       {rooms.map((room) => (
         <RoomCard
           key={room.id}
           room={room}
           isSaved={savedRoomIds.includes(room.id)}
           onSave={onSave}
-          isAuthenticated={isAuthenticated}
-          onRequireLogin={onRequireLogin}
+          isAuthenticated={!!isAuthenticated}
+          onRequireLogin={onRequireLogin!}
         />
       ))}
     </div>

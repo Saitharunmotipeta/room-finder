@@ -43,7 +43,7 @@ export default function SignupPage() {
   return (
     <main style={page}>
       <div style={card}>
-        <h1 style={title}>Create your account</h1>
+        <h1 style={{color:"black",...title}}>Create your account</h1>
         <p style={subtitle}>Sign up to explore rooms effortlessly</p>
 
         {message && (
@@ -58,7 +58,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <div style={field}>
+        <div style={{color:"black",...field}}>
           <label style={label}>Email address</label>
           <input
             type="email"
@@ -69,7 +69,7 @@ export default function SignupPage() {
           />
         </div>
 
-        <div style={field}>
+        <div style={{color:"black",...field}}>
           <label style={label}>Password</label>
           <input
             type="password"
@@ -84,7 +84,7 @@ export default function SignupPage() {
           {loading ? "Creating account…" : "Sign Up"}
         </button>
 
-        <p style={footerText}>
+        <p style={{color:"black",...footerText}}>
           Already have an account?{" "}
           <Link href="/login" style={link}>
             Login

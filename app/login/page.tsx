@@ -141,12 +141,12 @@ export default function LoginPage() {
   return (
     <div style={container}>
       <div style={card}>
-        <h1 style={title}>Welcome back</h1>
+        <h1 style={{color:"black" , ...title}} >Welcome back</h1>
         <p style={subtitle}>Login to continue exploring rooms</p>
 
         {message && <div style={alert}>{message}</div>}
 
-        <label style={label}>Email address</label>
+        <label style={{color:"black",...label}}>Email address</label>
         <input
           style={input}
           value={email}
@@ -154,7 +154,7 @@ export default function LoginPage() {
           placeholder="you@example.com"
         />
 
-        <label style={label}>Password</label>
+        <label style={{color:"black",...label}}>Password</label>
         <input
           type="password"
           style={input}
@@ -171,7 +171,7 @@ export default function LoginPage() {
           {loading ? "Logging in…" : "Login"}
         </button>
 
-        <p style={footer}>
+        <p style={{color:"black",...footer}}>
           Don’t have an account?{" "}
           <Link href="/signup" style={link}>
             Sign up

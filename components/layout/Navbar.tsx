@@ -18,6 +18,7 @@ export default function Navbar() {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "12px 24px",
+        color : "#111827",
         borderBottom: "1px solid #e5e7eb",
       }}
     >
