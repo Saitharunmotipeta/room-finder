@@ -1,16 +1,20 @@
 import { supabase } from "@/services/supabase/client"
+import { User } from "@supabase/supabase-js"
 
-export async function ensureProfileExists(userId: string) {
-  const { data, error } = await supabase
+export async function ensureProfileExists(user: User) {
+  if (!user?.id) return
+
+  const { data } = await supabase
     .from("profiles")
     .select("id")
-    .eq("id", userId)
+    .eq("id", user.id)
     .single()
 
   if (data) return
 
   await supabase.from("profiles").insert({
-    id: userId,
-    role: "owner",
+    id: user.id,
+    email: user.email,
+    role: "owner", // keep owner here if this function is owner-specific
   })
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 import Link from "next/link"
@@ -8,81 +8,176 @@ import Link from "next/link"
 export default function LoginPage() {
   const router = useRouter()
 
+  /* ---------------- Styles ---------------- */
+  const container = {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#f8fafc",
+  }
+
+  const card = {
+    width: 380,
+    padding: 28,
+    borderRadius: 12,
+    background: "#ffffff",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+  }
+
+  const title = {
+    fontSize: 24,
+    fontWeight: 700,
+    marginBottom: 6,
+  }
+
+  const subtitle = {
+    fontSize: 14,
+    color: "#64748b",
+    marginBottom: 20,
+  }
+
+  const label = {
+    fontSize: 13,
+    fontWeight: 500,
+    marginBottom: 6,
+    display: "block",
+  }
+
+  const input = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #cbd5e1",
+    marginBottom: 14,
+  }
+
+  const button = {
+    width: "100%",
+    padding: 12,
+    borderRadius: 8,
+    background: "#4f46e5",
+    color: "#fff",
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+    opacity: 1,
+  }
+
+  const alert = {
+    padding: 10,
+    borderRadius: 8,
+    background: "#f1f5f9",
+    fontSize: 14,
+    marginBottom: 14,
+  }
+
+  const footer = {
+    marginTop: 16,
+    fontSize: 14,
+    textAlign: "center" as const,
+  }
+
+  const link = {
+    color: "#4f46e5",
+    fontWeight: 600,
+  }
+
+  /* ---------------- State ---------------- */
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
+  /* ---------------- AUTH LISTENER (KEY FIX) ---------------- */
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        const userEmail = session.user.email || ""
+
+        // 🔥 STATIC ROLE ROUTING (AS DECIDED)
+        if (userEmail === "admin@roomfinder.com") {
+          router.replace("/admin")
+        } else if (userEmail === "owner@roomfinder.com") {
+          router.replace("/owner")
+        } else {
+          router.replace("/dashboard")
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
+
+  /* ---------------- Login Handler ---------------- */
   const handleLogin = async () => {
+    if (!email || !password) {
+      setMessage("⚠️ Please enter email and password")
+      return
+    }
+
     setLoading(true)
-    setError(null)
+    setMessage(null)
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    setLoading(false)
-
     if (error) {
-      setError(error.message)
+      setMessage("❌ Invalid email or password")
+      setLoading(false)
       return
     }
 
-    router.replace("/dashboard")
-  }
-
-  const handleMagicLink = async () => {
-    setLoading(true)
-    setError(null)
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-      },
-    })
-
+    setMessage("✅ Login successful, redirecting…")
     setLoading(false)
-
-    if (error) {
-      setError(error.message)
-      return
-    }
-
-    alert("Magic link sent to your email")
+    // ❌ DO NOT redirect here
   }
 
+  /* ---------------- UI ---------------- */
   return (
-    <div>
-      <h1>Login</h1>
+    <div style={container}>
+      <div style={card}>
+        <h1 style={title}>Welcome back</h1>
+        <p style={subtitle}>Login to continue exploring rooms</p>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {message && <div style={alert}>{message}</div>}
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <label style={label}>Email address</label>
+        <input
+          style={input}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <label style={label}>Password</label>
+        <input
+          type="password"
+          style={input}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
 
-      <button onClick={handleLogin} disabled={loading}>
-        Login
-      </button>
+        <button
+          style={{ ...button, opacity: loading ? 0.7 : 1 }}
+          onClick={handleLogin}
+          disabled={loading}
+        >
+          {loading ? "Logging in…" : "Login"}
+        </button>
 
-      <button onClick={handleMagicLink} disabled={loading}>
-        Login with Magic Link
-      </button>
-
-      <p>
-        Don’t have an account? <Link href="/signup">Sign up</Link>
-      </p>
+        <p style={footer}>
+          Don’t have an account?{" "}
+          <Link href="/signup" style={link}>
+            Sign up
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

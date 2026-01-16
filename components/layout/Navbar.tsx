@@ -1,15 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import ProfileBadge from "@/components/common/ProfileBadge"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfile } from "@/hooks/useProfile"
+import ProfileBadge from "@/components/common/ProfileBadge"
 
 export default function Navbar() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { profile } = useProfile()
 
-  if (loading) return null
+  const role = profile?.role
 
   return (
     <nav
@@ -21,14 +21,11 @@ export default function Navbar() {
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      {/* Brand */}
-      <Link href="/" style={{ fontWeight: 600, fontSize: 18 }}>
+      <Link href="/" style={{ fontWeight: 600 }}>
         RoomFinder
       </Link>
 
-      {/* Right side */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        {/* ---------------- Guest ---------------- */}
+      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
         {!isAuthenticated && (
           <>
             <Link href="/dashboard">Find Rooms</Link>
@@ -36,8 +33,7 @@ export default function Navbar() {
           </>
         )}
 
-        {/* ---------------- User ---------------- */}
-        {isAuthenticated && profile?.role === "user" && (
+        {isAuthenticated && role === "user" && (
           <>
             <Link href="/dashboard?view=explore">Explore</Link>
             <Link href="/dashboard?view=saved">Saved</Link>
@@ -46,20 +42,17 @@ export default function Navbar() {
           </>
         )}
 
-        {/* ---------------- Owner ---------------- */}
-        {isAuthenticated && profile?.role === "owner" && (
+        {isAuthenticated && role === "owner" && (
           <>
             <Link href="/owner">Owner</Link>
-            <Link href="/owner/rooms">My Rooms</Link>
+            <Link href="/owner/new">Add Room</Link>
             <ProfileBadge />
           </>
         )}
 
-        {/* ---------------- Admin ---------------- */}
-        {isAuthenticated && profile?.role === "admin" && (
+        {isAuthenticated && role === "admin" && (
           <>
             <Link href="/admin">Admin</Link>
-            <Link href="/admin/owners">Owners</Link>
             <ProfileBadge />
           </>
         )}

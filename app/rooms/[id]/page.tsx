@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 import { addRecentlyViewed } from "@/utils/recentlyViewed"
+import { useAuth } from "@/hooks/useAuth"
 
 type Room = {
   id: string
@@ -13,29 +14,32 @@ type Room = {
   property_type: string
   tenant_preference: string
   owner_email: string
-  room_images: {
-    image_url: string
-  }[]
+  room_images: { image_url: string }[]
 }
 
 export default function RoomDetailsPage() {
-  const params = useParams<{ id: string }>()
-  const roomId = params.id
+  const { user, loading: authLoading } = useAuth()
+  const params = useParams()
+  const roomId = typeof params?.id === "string" ? params.id : null
 
   const [room, setRoom] = useState<Room | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!roomId) return
+    // ⛔ wait for auth hydration
+    if (authLoading) return
 
-    // ⭐ Track recently viewed room
-    addRecentlyViewed(roomId)
+    if (!roomId) {
+      setLoading(false)
+      return
+    }
+
+    let mounted = true
 
     const loadRoom = async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select(
-          `
+        .select(`
           id,
           title,
           location,
@@ -44,54 +48,68 @@ export default function RoomDetailsPage() {
           tenant_preference,
           owner_email,
           room_images ( image_url )
-        `
-        )
+        `)
         .eq("id", roomId)
         .single()
 
-      if (!error) {
+      if (!mounted) return
+
+      if (error) {
+        console.error("Room fetch error:", error)
+        setRoom(null)
+      } else {
         setRoom(data)
+        addRecentlyViewed(roomId)
       }
 
       setLoading(false)
     }
 
     loadRoom()
-  }, [roomId])
 
-  if (loading) return <p>Loading room...</p>
-  if (!room) return <p>Room not found</p>
+    return () => {
+      mounted = false
+    }
+  }, [roomId, authLoading])
+
+  /* ---------- UI STATES ---------- */
+
+  if (authLoading || loading) {
+    return (
+      <main style={{ padding: 24 }}>
+        <p style={{ color: "#64748b" }}>Loading room details…</p>
+      </main>
+    )
+  }
+
+  if (!room) {
+    return (
+      <main style={{ padding: 24 }}>
+        <p style={{ color: "#ef4444" }}>Room not found</p>
+      </main>
+    )
+  }
 
   return (
-    <div style={{ padding: 24 }}>
+    <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
       <h1>{room.title}</h1>
 
-      {room.room_images?.[0] && (
+      {room.room_images?.length > 0 && (
         <img
           src={room.room_images[0].image_url}
-          alt="Room"
-          width={400}
-          style={{ marginBottom: 16 }}
+          style={{ width: "100%", borderRadius: 8, marginBottom: 20 }}
         />
       )}
 
-      <p>
-        <strong>Location:</strong> {room.location}
-      </p>
-      <p>
-        <strong>Rent:</strong> ₹{room.rent}
-      </p>
-      <p>
-        <strong>Property Type:</strong> {room.property_type}
-      </p>
-      <p>
-        <strong>Tenant Preference:</strong> {room.tenant_preference}
-      </p>
+      <p><strong>Location:</strong> {room.location}</p>
+      <p><strong>Rent:</strong> ₹{room.rent}</p>
+      <p><strong>Type:</strong> {room.property_type}</p>
+      <p><strong>Tenant:</strong> {room.tenant_preference}</p>
 
       <hr style={{ margin: "24px 0" }} />
 
       <h3>Owner Contact</h3>
-      <p>Email: {room.owner_email}</p>
-    </div>
+      <p>{room.owner_email}</p>
+    </main>
   )
 }

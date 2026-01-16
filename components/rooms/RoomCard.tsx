@@ -1,4 +1,5 @@
 import { Room } from "@/types/room"
+import Link from "next/link"
 
 type Props = {
   room: Room
@@ -48,7 +49,7 @@ export default function RoomCard({
       <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
         {/* View Details */}
         {isAuthenticated ? (
-          <a href={`/rooms/${room.id}`}>View Details</a>
+          <Link href={`/rooms/${room.id}`} prefetch={false}>View Details</Link>
         ) : (
           <button onClick={onRequireLogin}>View Details</button>
         )}

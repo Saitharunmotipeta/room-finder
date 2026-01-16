@@ -4,13 +4,11 @@ import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/services/supabase/client"
 import Link from "next/link"
-import { redirectByRole } from "@/utils/redirectByRole"
 
 export default function SignupPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // 🔹 role intent from query (?role=owner | admin | user)
   const role =
     searchParams.get("role") === "admin"
       ? "admin"
@@ -21,68 +19,132 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null)
 
   const handleSignup = async () => {
     setLoading(true)
-    setError(null)
+    setMessage(null)
 
-    // 1️⃣ Create auth user
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     })
 
-    if (error || !data.user) {
+    if (error) {
+      setMessage({ type: "error", text: error.message })
       setLoading(false)
-      setError(error?.message || "Signup failed")
       return
     }
 
-    // 2️⃣ Create profile with role
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      email,
-      role,
-    })
-
-    setLoading(false)
-
-    if (profileError) {
-      setError(profileError.message)
-      return
-    }
-
-    // 3️⃣ Redirect based on role
-    router.replace(redirectByRole(role))
+    setMessage({ type: "success", text: "Account created successfully. Redirecting…" })
+    setTimeout(() => router.replace("/dashboard"), 800)
   }
 
   return (
-    <div>
-      <h1>Sign Up</h1>
+    <main style={page}>
+      <div style={card}>
+        <h1 style={title}>Create your account</h1>
+        <p style={subtitle}>Sign up to explore rooms effortlessly</p>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {message && (
+          <div
+            style={{
+              ...alert,
+              background: message.type === "error" ? "#fee2e2" : "#e0f2fe",
+              color: message.type === "error" ? "#991b1b" : "#075985",
+            }}
+          >
+            {message.text}
+          </div>
+        )}
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <div style={field}>
+          <label style={label}>Email address</label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={input}
+          />
+        </div>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <div style={field}>
+          <label style={label}>Password</label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={input}
+          />
+        </div>
 
-      <button onClick={handleSignup} disabled={loading}>
-        Create Account
-      </button>
+        <button onClick={handleSignup} disabled={loading} style={button}>
+          {loading ? "Creating account…" : "Sign Up"}
+        </button>
 
-      <p>
-        Already have an account? <Link href="/login">Login</Link>
-      </p>
-    </div>
+        <p style={footerText}>
+          Already have an account?{" "}
+          <Link href="/login" style={link}>
+            Login
+          </Link>
+        </p>
+      </div>
+    </main>
   )
+}
+
+/* ---------- Styles ---------- */
+
+const page = {
+  minHeight: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#f8fafc",
+}
+
+const card = {
+  width: "100%",
+  maxWidth: 420,
+  background: "#fff",
+  padding: 32,
+  borderRadius: 12,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+}
+
+const title = { fontSize: 24, fontWeight: 700 }
+const subtitle = { marginTop: 6, marginBottom: 24, color: "#555" }
+
+const field = { marginBottom: 16 }
+const label = { display: "block", marginBottom: 6, fontSize: 14, fontWeight: 500 }
+const input = {
+  width: "100%",
+  padding: "10px 12px",
+  borderRadius: 8,
+  border: "1px solid #d1d5db",
+  outline: "none",
+}
+
+const button = {
+  width: "100%",
+  marginTop: 12,
+  padding: "12px",
+  borderRadius: 8,
+  background: "#4f46e5",
+  color: "#fff",
+  fontWeight: 600,
+  border: "none",
+  cursor: "pointer",
+}
+
+const footerText = { marginTop: 20, fontSize: 14, textAlign: "center" as const }
+const link = { color: "#4f46e5", fontWeight: 500 }
+
+const alert = {
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 16,
+  fontSize: 14,
 }

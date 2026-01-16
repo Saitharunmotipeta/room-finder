@@ -6,21 +6,23 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Initial user fetch
+    let mounted = true
+
     supabase.auth.getUser().then(({ data }) => {
+      if (!mounted) return
       setUser(data.user ?? null)
       setLoading(false)
     })
 
-    // Listen for auth state changes
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (!mounted) return
         setUser(session?.user ?? null)
-      }
-    )
+      })
 
     return () => {
-      listener.subscription.unsubscribe()
+      mounted = false
+      subscription.unsubscribe()
     }
   }, [])
 
