@@ -2,12 +2,14 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         router.replace("/dashboard")

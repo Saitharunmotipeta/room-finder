@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import Link from "next/link"
 
 export default function SignupPage() {
@@ -25,10 +25,8 @@ export default function SignupPage() {
     setLoading(true)
     setMessage(null)
 
-    if (!supabase) {
-        console.warn("Supabase not initialized")
-        return
-        }
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
 
 
     const { error } = await supabase.auth.signUp({

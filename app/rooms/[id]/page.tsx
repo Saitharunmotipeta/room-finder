@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { addRecentlyViewed } from "@/utils/recentlyViewed"
 import { useAuth } from "@/hooks/useAuth"
 import {
@@ -43,6 +43,8 @@ export default function RoomDetailsPage() {
     let mounted = true
 
     const loadRoom = async () => {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
       const { data, error } = await supabase
         .from("rooms")
         .select(`

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { redirect } from "next/navigation"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { useProfile } from "@/hooks/useProfile"
 import { useAuth } from "@/hooks/useAuth"
 import { Trash2 } from "lucide-react"
@@ -35,6 +35,8 @@ export default function AdminPage() {
     if (!user || profile?.role !== "admin") return
 
     const loadRooms = async () => {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
       const { data } = await supabase
         .from("rooms")
         .select("id, title, location, rent, owner_email")
@@ -50,6 +52,8 @@ export default function AdminPage() {
   const handleDelete = async (roomId: string) => {
     const confirmed = confirm("Delete this room permanently?")
     if (!confirmed) return
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
 
     await supabase.from("rooms").delete().eq("id", roomId)
     setRooms((prev) => prev.filter((r) => r.id !== roomId))

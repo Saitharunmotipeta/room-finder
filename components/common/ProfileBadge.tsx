@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { useProfile } from "@/hooks/useProfile"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
@@ -88,6 +88,8 @@ export default function ProfileBadge() {
         <button
           style={{...logoutBtn, color:"red" }}
           onClick={async () => {
+            const supabase = getSupabaseClient()
+            if (!supabase) throw new Error("Supabase client not found") 
             await supabase.auth.signOut()
             router.replace("/")
           }}

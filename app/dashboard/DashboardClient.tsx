@@ -7,7 +7,7 @@ import SearchBar from "@/components/rooms/SearchBar"
 import { useRooms } from "@/features/rooms/useRooms"
 import { useSavedRooms } from "@/hooks/useSavedRooms"
 import { getRecentlyViewed } from "@/utils/recentlyViewed"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfile } from "@/hooks/useProfile"
 import LoginPromptModal from "@/components/common/LoginPromptModal"
@@ -47,6 +47,8 @@ export default function DashboardClient() {
     if (view !== "recent") return
 
     const loadRecentRooms = async () => {
+        const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
       const ids = getRecentlyViewed()
       if (ids.length === 0) return
 

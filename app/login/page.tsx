@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import Link from "next/link"
 
 export default function LoginPage() {
@@ -91,6 +91,8 @@ export default function LoginPage() {
 
   /* ---------------- AUTH LISTENER (KEY FIX) ---------------- */
   useEffect(() => {
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -120,6 +122,8 @@ export default function LoginPage() {
 
     setLoading(true)
     setMessage(null)
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

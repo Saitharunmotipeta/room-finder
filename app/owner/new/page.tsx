@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { ImagePlus } from "lucide-react"
@@ -25,6 +25,8 @@ export default function AddRoomPage() {
     }
 
     setLoading(true)
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
 
     // 1️⃣ Insert room
     const { data: room, error } = await supabase
