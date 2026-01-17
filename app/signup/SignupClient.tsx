@@ -25,6 +25,12 @@ export default function SignupPage() {
     setLoading(true)
     setMessage(null)
 
+    if (!supabase) {
+        console.warn("Supabase not initialized")
+        return
+        }
+
+
     const { error } = await supabase.auth.signUp({
       email,
       password,

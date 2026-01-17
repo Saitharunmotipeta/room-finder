@@ -50,6 +50,11 @@ export default function DashboardClient() {
       const ids = getRecentlyViewed()
       if (ids.length === 0) return
 
+      if (!supabase) {
+        console.warn("Supabase not initialized")
+        return
+        }
+
       const { data } = await supabase
         .from("rooms")
         .select("*")
