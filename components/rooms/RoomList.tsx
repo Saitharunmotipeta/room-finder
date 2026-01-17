@@ -18,7 +18,7 @@ export default function RoomList({
   if (rooms.length === 0) return <p>No rooms found.</p>
 
   return (
-    <div style={{ color : "#111827", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+    <div style={{ color : "#111827", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
       {rooms.map((room) => (
         <RoomCard
           key={room.id}

@@ -1,23 +1,37 @@
-FROM node:18-alpine AS base
+# -------- Base image --------
+FROM node:20-alpine AS builder
+
+# Set working directory
 WORKDIR /app
 
-FROM base AS deps
+# Copy package files first (better caching)
 COPY package.json package-lock.json* ./
-RUN npm install --frozen-lockfile
 
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+# Install dependencies
+RUN npm install
+
+# Copy rest of the app
 COPY . .
+
+# Build Next.js app
 RUN npm run build
 
-FROM base AS runner
+
+# -------- Production image --------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
 ENV NODE_ENV=production
 
+# Copy only required files
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Expose Next.js port
 EXPOSE 3000
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
+# Start app
 CMD ["npm", "start"]
