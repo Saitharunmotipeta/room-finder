@@ -1,9 +1,11 @@
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 
 /**
  * Get all room IDs saved by the currently logged-in user
  */
 export async function getSavedRoomIds(): Promise<string[]> {
+  const supabase = getSupabaseClient()
+  if (!supabase) throw new Error("Supabase client not found")
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -27,6 +29,8 @@ export async function getSavedRoomIds(): Promise<string[]> {
  * Save a room for the logged-in user
  */
 export async function saveRoom(roomId: string): Promise<void> {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -50,6 +54,8 @@ export async function saveRoom(roomId: string): Promise<void> {
  * Remove a saved room for the logged-in user
  */
 export async function unsaveRoom(roomId: string): Promise<void> {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -71,6 +77,8 @@ export async function unsaveRoom(roomId: string): Promise<void> {
 }
 
 export async function getSavedRooms() {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   const {
     data: { user },
   } = await supabase.auth.getUser()

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { useAuth } from "./useAuth"
 
 type Profile = {
@@ -20,6 +20,8 @@ export function useProfile() {
     }
 
     const loadProfile = async () => {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
       const { data, error } = await supabase
         .from("profiles")
         .select("role, name")

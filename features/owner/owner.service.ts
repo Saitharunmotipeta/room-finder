@@ -1,6 +1,8 @@
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 
 export function getOwnerRooms(ownerId: string) {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   return supabase
     .from("rooms")
     .select("*")
@@ -8,6 +10,8 @@ export function getOwnerRooms(ownerId: string) {
 }
 
 export function createRoom(payload: any) {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   return supabase.from("rooms").insert(payload)
 }
 
@@ -15,6 +19,8 @@ export function getOwnerAnalytics(
   ownerId: string,
   filters?: { location?: string; minRent?: number; maxRent?: number }
 ) {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   let query = supabase
     .from("rooms")
     .select("id", { count: "exact", head: true })

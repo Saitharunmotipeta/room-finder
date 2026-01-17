@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null)
@@ -7,6 +7,8 @@ export function useAuth() {
 
   useEffect(() => {
     let mounted = true
+    const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
 
     supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return

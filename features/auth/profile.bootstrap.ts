@@ -1,9 +1,11 @@
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { User } from "@supabase/supabase-js"
 
 export async function ensureProfileExists(user: User) {
   if (!user?.id) return
 
+  const supabase = getSupabaseClient()
+  if (!supabase) throw new Error("Supabase client not found")
   const { data } = await supabase
     .from("profiles")
     .select("id")

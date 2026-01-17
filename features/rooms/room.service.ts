@@ -1,8 +1,11 @@
-import { supabase } from "@/services/supabase/client"
+import { getSupabaseClient } from "@/services/supabase/client"
 import { Room } from "./room.types"
 import { parseSearchQuery } from "@/utils/parseSearchQuery"
 
 export async function fetchRooms(query: string) {
+  const supabase = getSupabaseClient()
+  if (!supabase) throw new Error("Supabase client not found")
+
   let q = supabase
     .from("rooms")
     .select(`
@@ -40,6 +43,8 @@ export async function fetchRooms(query: string) {
 
 
 export async function fetchRoomById(id: string): Promise<Room | null> {
+  const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Supabase client not found") 
   const { data, error } = await supabase
     .from("rooms")
     .select(`*, room_images ( image_url )`)
